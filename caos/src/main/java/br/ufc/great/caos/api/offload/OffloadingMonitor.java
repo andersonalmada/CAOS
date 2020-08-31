@@ -225,7 +225,15 @@ public final class OffloadingMonitor implements InvocationHandler {
 			mOffloadingClient = OffloadingClient.getInstance();
 			if (offloadable != null && mConnectionVerify.hasConnection() == true && Caos.sCloudletIp != null) {
 				if (offloadable.value() == Offload.STATIC) {
-					return mOffloadingClient.sendOffloadingRequest(invocableMethod);
+					Object returnedObject = mOffloadingClient.sendOffloadingRequest(invocableMethod);
+
+					// If there is some error, the execution must be local
+					if (returnedObject instanceof OffloadingError) {
+						Log.e("caos-api", "We got some error during the offloading, the execution will be local");
+						return executeLocal(method, params);
+					} else {
+						return returnedObject;
+					}
 				} else {
 					if (mOffloadingReasonerClient.makeDecision(invocableMethod)) {
 
